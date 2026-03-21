@@ -105,11 +105,12 @@ export async function hydrateLocalStorageFromCloud() {
     const payload = (await response.json()) as {
       data?: Partial<Record<StorageKey, unknown>>;
     };
-    if (!payload.data) return;
+    const data = payload.data;
+    if (!data) return;
 
     (Object.keys(LS_KEYS) as StorageKey[]).forEach((key) => {
-      if (!(key in payload.data)) return;
-      const value = payload.data[key];
+      if (!(key in data)) return;
+      const value = data[key];
       if (typeof value === 'undefined') return;
       localStorage.setItem(LS_KEYS[key], JSON.stringify(value));
     });

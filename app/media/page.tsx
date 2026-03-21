@@ -216,15 +216,15 @@ export default function Media() {
         }),
       );
 
-      const uploaded = uploadedResults
-        .filter((result): result is PromiseFulfilledResult<Media> => result.status === 'fulfilled')
-        .map((result) => result.value);
+      const uploaded = uploadedResults.flatMap((result) =>
+        result.status === 'fulfilled' ? [result.value] : [],
+      );
 
-      uploadedResults
-        .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
-        .forEach((result) => {
+      uploadedResults.forEach((result) => {
+        if (result.status === 'rejected') {
           console.warn('Skipped file during upload:', result.reason);
-        });
+        }
+      });
 
       if (uploaded.length === 0) {
         event.target.value = '';
