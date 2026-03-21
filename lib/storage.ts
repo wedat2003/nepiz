@@ -28,9 +28,6 @@ export function saveToStorage<T>(key: StorageKey, data: T[]): void {
   try {
     localStorage.setItem(LS_KEYS[key], JSON.stringify(data));
     window.dispatchEvent(new Event('local-storage'));
-    if (loadValueFromStorage('loginSession', false)) {
-      void syncCloudValue(key, data);
-    }
   } catch (e) {
     console.error(`Failed to save to storage: ${key}`, e);
   }
@@ -51,9 +48,6 @@ export function saveValueToStorage<T>(key: StorageKey, value: T): void {
   try {
     localStorage.setItem(LS_KEYS[key], JSON.stringify(value));
     window.dispatchEvent(new Event('local-storage'));
-    if (loadValueFromStorage('loginSession', false) || key === 'loginSession') {
-      void syncCloudValue(key, value);
-    }
   } catch (e) {
     console.error(`Failed to save value to storage: ${key}`, e);
   }
@@ -64,61 +58,15 @@ export function removeFromStorage(key: StorageKey): void {
   try {
     localStorage.removeItem(LS_KEYS[key]);
     window.dispatchEvent(new Event('local-storage'));
-    if (loadValueFromStorage('loginSession', false) || key === 'loginSession') {
-      void deleteCloudValue(key);
-    }
   } catch (e) {
     console.error(`Failed to remove from storage: ${key}`, e);
   }
 }
 
-async function syncCloudValue<T>(key: StorageKey, value: T) {
-  try {
-    await fetch('/api/cloud-storage', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ key, value }),
-    });
-  } catch {
-    // keep local mode if cloud sync fails
-  }
-}
-
-async function deleteCloudValue(key: StorageKey) {
-  try {
-    await fetch(`/api/cloud-storage?key=${encodeURIComponent(key)}`, {
-      method: 'DELETE',
-    });
-  } catch {
-    // keep local mode if cloud sync fails
-  }
-}
-
 export async function hydrateLocalStorageFromCloud() {
-  if (typeof window === 'undefined') return;
-
-  try {
-    const response = await fetch('/api/cloud-storage', { method: 'GET' });
-    if (!response.ok) return;
-    const payload = (await response.json()) as {
-      data?: Partial<Record<StorageKey, unknown>>;
-    };
-    const data = payload.data;
-    if (!data) return;
-
-    (Object.keys(LS_KEYS) as StorageKey[]).forEach((key) => {
-      if (!(key in data)) return;
-      const value = data[key];
-      if (typeof value === 'undefined') return;
-      localStorage.setItem(LS_KEYS[key], JSON.stringify(value));
-    });
-
-    window.dispatchEvent(new Event('local-storage'));
-  } catch {
-    // keep local mode if cloud pull fails
-  }
+  // GitHub Pages uses static export (no server/API routes).
+  // Keep this async function as a no-op so existing callers remain valid.
+  return;
 }
 
 export function generateId(): string {
