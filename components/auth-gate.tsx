@@ -6,26 +6,27 @@ import { Heart } from 'lucide-react';
 import { hydrateLocalStorageFromCloud } from '@/lib/storage';
 import { useStoredValue } from '@/lib/storage-hooks';
 
-const PUBLIC_PATHS = new Set(['/login']);
-
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const authenticated = useStoredValue('loginSession', false);
   const hydratedRef = useRef(false);
-  const isLoginPath = pathname === '/login' || pathname.startsWith('/login/');
-  const isPublicPath = isLoginPath || PUBLIC_PATHS.has(pathname);
+  const ghBase = pathname.startsWith('/nepiz/') || pathname === '/nepiz' ? '/nepiz' : '';
+  const loginPath = `${ghBase}/login`;
+  const homePath = ghBase ? `${ghBase}/` : '/';
+  const isLoginPath = /(^|\/)login\/?$/.test(pathname);
+  const isPublicPath = isLoginPath;
 
   useEffect(() => {
     if (!authenticated && !isPublicPath) {
-      router.replace('/login');
+      router.replace(loginPath);
       return;
     }
 
     if (authenticated && isLoginPath) {
-      router.replace('/');
+      router.replace(homePath);
     }
-  }, [authenticated, isPublicPath, isLoginPath, router]);
+  }, [authenticated, isPublicPath, isLoginPath, router, loginPath, homePath]);
 
   useEffect(() => {
     if (!authenticated || hydratedRef.current) return;
