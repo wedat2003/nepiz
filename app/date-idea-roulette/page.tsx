@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { ArrowLeft, Plus, X } from 'lucide-react';
-import { Wheel } from 'react-custom-roulette';
 import { Button } from '@/components/ui/button';
 
 export default function DateIdeaRoulettePage() {
   const [mustSpin, setMustSpin] = useState(false);
   const [prizeNumber, setPrizeNumber] = useState(0);
+  const [wheelRotation, setWheelRotation] = useState(0);
   const [selectedIdea, setSelectedIdea] = useState<string | null>(null);
   const [newIdea, setNewIdea] = useState('');
   const [ideas, setIdeas] = useState<string[]>([
@@ -20,21 +20,50 @@ export default function DateIdeaRoulettePage() {
     'Museum date',
   ]);
 
-  const rouletteData = useMemo(
-    () =>
-      ideas.map((idea) => ({
-        option: idea.length >= 30 ? `${idea.substring(0, 30).trimEnd()}...` : idea,
-      })),
-    [ideas],
-  );
   const safePrizeNumber = ideas.length > 0 ? Math.min(prizeNumber, ideas.length - 1) : 0;
+  const segmentAngle = ideas.length > 0 ? 360 / ideas.length : 360;
+  const wheelBackground = useMemo(() => {
+    if (ideas.length === 0) return 'transparent';
+    const colors = [
+      '#4c1d95',
+      '#6d28d9',
+      '#7e22ce',
+      '#86198f',
+      '#a21caf',
+      '#be185d',
+      '#db2777',
+      '#e11d48',
+      '#9333ea',
+      '#8b5cf6',
+      '#7c3aed',
+      '#c026d3',
+    ];
+    const stops = ideas
+      .map((_, index) => {
+        const start = index * segmentAngle;
+        const end = (index + 1) * segmentAngle;
+        const color = colors[index % colors.length];
+        return `${color} ${start}deg ${end}deg`;
+      })
+      .join(', ');
+    return `conic-gradient(from -90deg, ${stops})`;
+  }, [ideas, segmentAngle]);
 
   const handleSpin = () => {
     if (mustSpin || ideas.length === 0) return;
     const nextPrize = Math.floor(Math.random() * ideas.length);
+    const targetCenterAngle = nextPrize * segmentAngle + segmentAngle / 2;
+    const targetRotation = 360 - targetCenterAngle;
+    const fullTurns = 360 * 6;
+    const nextRotation = wheelRotation + fullTurns + targetRotation;
     setPrizeNumber(nextPrize);
+    setWheelRotation(nextRotation);
     setMustSpin(true);
     setSelectedIdea(null);
+    window.setTimeout(() => {
+      setMustSpin(false);
+      setSelectedIdea(ideas[nextPrize] ?? null);
+    }, 4200);
   };
 
   const handleAddIdea = () => {
@@ -50,6 +79,7 @@ export default function DateIdeaRoulettePage() {
       if (next.length === 0) {
         setMustSpin(false);
         setPrizeNumber(0);
+        setWheelRotation(0);
         setSelectedIdea(null);
       } else if (prizeNumber >= next.length) {
         setPrizeNumber(0);
@@ -84,38 +114,29 @@ export default function DateIdeaRoulettePage() {
             <div className="flex flex-col items-center justify-center gap-8 rounded-2xl border border-transparent bg-transparent p-6 md:p-8">
               <div className="relative mx-auto aspect-square w-full max-w-[34rem] [&>div]:!h-full [&>div]:!w-full [&>div]:!max-h-none [&>div]:!max-w-none">
                 {ideas.length > 0 ? (
-                  <Wheel
-                    mustStartSpinning={mustSpin}
-                    prizeNumber={safePrizeNumber}
-                    data={rouletteData}
-                    spinDuration={0.2}
-                    outerBorderColor="#f5d0fe"
-                    outerBorderWidth={9}
-                    innerBorderColor="#fdf4ff"
-                    radiusLineColor="transparent"
-                    radiusLineWidth={1}
-                  textColors={['#f5f5f5']}
-                    textDistance={55}
-                    fontSize={10}
-                  backgroundColors={[
-                    '#4c1d95',
-                    '#6d28d9',
-                    '#7e22ce',
-                    '#86198f',
-                    '#a21caf',
-                    '#be185d',
-                    '#db2777',
-                    '#e11d48',
-                    '#9333ea',
-                    '#8b5cf6',
-                    '#7c3aed',
-                    '#c026d3',
-                  ]}
-                    onStopSpinning={() => {
-                      setMustSpin(false);
-                      setSelectedIdea(ideas[safePrizeNumber] ?? null);
-                    }}
-                  />
+                  <div className="relative h-full w-full">
+                    <div className="absolute left-1/2 top-1 z-10 h-0 w-0 -translate-x-1/2 border-l-[14px] border-r-[14px] border-t-[22px] border-l-transparent border-r-transparent border-t-fuchsia-100 drop-shadow-[0_0_12px_rgba(244,114,182,0.65)]" />
+                    <div
+                      className="relative h-full w-full rounded-full border-[9px] border-fuchsia-200/80 shadow-[0_0_0_1px_rgba(255,255,255,0.45)_inset]"
+                      style={{
+                        background: wheelBackground,
+                        transform: `rotate(${wheelRotation}deg)`,
+                        transition: mustSpin ? 'transform 4.2s cubic-bezier(0.18, 0.84, 0.16, 1)' : 'none',
+                      }}
+                    >
+                      {ideas.map((idea, index) => (
+                        <div
+                          key={`${idea}-${index}`}
+                          className="absolute left-1/2 top-1/2 w-[44%] -translate-y-1/2 origin-left text-center text-[11px] font-medium text-white"
+                          style={{ transform: `rotate(${index * segmentAngle + segmentAngle / 2 - 90}deg)` }}
+                        >
+                          <span className="block -translate-y-1/2 rounded-md bg-black/20 px-2 py-1 backdrop-blur-sm">
+                            {idea.length > 22 ? `${idea.substring(0, 22).trimEnd()}...` : idea}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 ) : (
                   <div className="grid h-full w-full place-items-center rounded-2xl border border-white/10 bg-white/[0.02]">
                     <p className="text-sm text-white/70">Add at least one idea</p>
@@ -141,7 +162,7 @@ export default function DateIdeaRoulettePage() {
                     ? 'Spinning...'
                     : ideas.length === 0
                       ? 'Add ideas to enable the roulette'
-                      : selectedIdea ?? 'Spin to pick a date idea'}
+                      : selectedIdea ?? `Spin to pick a date idea (${ideas[safePrizeNumber] ?? ''})`}
                 </p>
               </div>
             </div>
