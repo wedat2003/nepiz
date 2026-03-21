@@ -11,22 +11,19 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const authenticated = useStoredValue('loginSession', false);
   const hydratedRef = useRef(false);
-  const ghBase = pathname.startsWith('/nepiz/') || pathname === '/nepiz' ? '/nepiz' : '';
-  const loginPath = `${ghBase}/login`;
-  const homePath = ghBase ? `${ghBase}/` : '/';
   const isLoginPath = /(^|\/)login\/?$/.test(pathname);
   const isPublicPath = isLoginPath;
 
   useEffect(() => {
     if (!authenticated && !isPublicPath) {
-      router.replace(loginPath);
+      router.replace('/login');
       return;
     }
 
     if (authenticated && isLoginPath) {
-      router.replace(homePath);
+      router.replace('/');
     }
-  }, [authenticated, isPublicPath, isLoginPath, router, loginPath, homePath]);
+  }, [authenticated, isPublicPath, isLoginPath, router]);
 
   useEffect(() => {
     if (!authenticated || hydratedRef.current) return;
