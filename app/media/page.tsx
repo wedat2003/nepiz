@@ -1,6 +1,6 @@
 'use client';
 
-import { ChangeEvent, useRef, useState } from 'react';
+import { ChangeEvent, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ImagePlus } from 'lucide-react';
 import InteractiveBentoGallery, {
@@ -124,7 +124,6 @@ function getSpan(type: Media['type'], width?: number, height?: number) {
 
 export default function Media() {
   const storedMedia = useStoredCollection<Media>('media', []);
-  const inputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Array<string | number>>([]);
@@ -256,14 +255,24 @@ export default function Media() {
               <ArrowLeft className="h-4 w-4" />
               Back
             </Link>
-            <button
-              onClick={() => inputRef.current?.click()}
-              className="btn btnPrimary flex min-w-[17rem] items-center justify-center gap-2 whitespace-nowrap px-8"
-              disabled={isUploading}
+            <label
+              htmlFor="gallery-upload-input"
+              className={`btn btnPrimary relative flex min-w-[17rem] items-center justify-center gap-2 whitespace-nowrap px-8 ${
+                isUploading ? 'pointer-events-none opacity-70' : ''
+              }`}
             >
               <ImagePlus className="h-4 w-4" />
               {isUploading ? 'Uploading...' : 'Add photos or videos'}
-            </button>
+              <input
+                id="gallery-upload-input"
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                onChange={handleUpload}
+                disabled={isUploading}
+              />
+            </label>
             {!isSelecting ? (
               <button
                 type="button"
@@ -305,14 +314,6 @@ export default function Media() {
                 </button>
               </>
             )}
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/*,video/*"
-              multiple
-              className="hidden"
-              onChange={handleUpload}
-            />
           </div>
         </div>
 

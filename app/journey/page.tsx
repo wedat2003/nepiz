@@ -331,19 +331,19 @@ export default function JourneyPage() {
                     <label className="block text-center text-xs uppercase tracking-wide text-white/60">
                       Photo
                     </label>
-                    <label className="flex h-14 w-full cursor-pointer items-center rounded-xl border border-white/30 bg-transparent px-4 text-sm text-white/80 transition hover:border-white/50">
+                    <div className="relative flex h-14 w-full items-center rounded-xl border border-white/30 bg-transparent px-4 text-sm text-white/80 transition hover:border-white/50">
                       <span className="block w-full pl-1 text-left">
                         {newMediaUrl ? 'Selected' : 'Choose image or video from your device'}
                       </span>
                       <input
                         type="file"
                         accept="image/*,video/*"
-                        className="hidden"
+                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                         onChange={(event) => {
                           void handleMediaChange(event);
                         }}
                       />
-                    </label>
+                    </div>
                   </div>
 
                   <div className="space-y-3">
