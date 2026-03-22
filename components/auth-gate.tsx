@@ -17,12 +17,25 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!authenticated && !isPublicPath) {
       router.replace('/login');
-      return;
+      const timer = window.setTimeout(() => {
+        if (!/(^|\/)login\/?$/.test(window.location.pathname)) {
+          window.location.assign('/login');
+        }
+      }, 180);
+      return () => window.clearTimeout(timer);
     }
 
     if (authenticated && isLoginPath) {
       router.replace('/');
+      const timer = window.setTimeout(() => {
+        if (/(^|\/)login\/?$/.test(window.location.pathname)) {
+          window.location.assign('/');
+        }
+      }, 180);
+      return () => window.clearTimeout(timer);
     }
+
+    return undefined;
   }, [authenticated, isPublicPath, isLoginPath, router]);
 
   useEffect(() => {
@@ -31,12 +44,19 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     void hydrateLocalStorageFromCloud();
   }, [authenticated]);
 
-  if ((!authenticated && !isPublicPath) || (authenticated && isLoginPath)) {
+  const needsTransition = (!authenticated && !isPublicPath) || (authenticated && isLoginPath);
+
+  if (needsTransition) {
+    const fallbackHref = authenticated ? '/' : '/login';
+    const fallbackLabel = authenticated ? 'Continue to home' : 'Continue to login';
     return (
       <div className="auth-loading">
         <div className="auth-loading__card">
           <Heart className="h-10 w-10 text-pink-300 animate-pulse" fill="currentColor" />
           <p>One moment...</p>
+          <a href={fallbackHref} className="btn mt-2">
+            {fallbackLabel}
+          </a>
         </div>
       </div>
     );
