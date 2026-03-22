@@ -40,6 +40,7 @@
 
 html {
   scroll-behavior: smooth;
+  background: var(--bg-1);
 }
 
 body {
@@ -55,6 +56,7 @@ body {
   padding: 40px 24px 64px;
   position: relative;
   overflow-x: hidden;
+  overscroll-behavior-y: none;
 }
 
 body > * {
@@ -894,8 +896,11 @@ h3 { font-size: clamp(16px, 2vw, 22px); }
 }
 
 input, textarea, select {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--line);
+  appearance: none;
+  -webkit-appearance: none;
+  color-scheme: dark;
+  background: rgba(23, 14, 33, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   color: white;
   padding: 10px 14px;
   border-radius: 8px;
@@ -905,8 +910,8 @@ input, textarea, select {
 
 input:focus, textarea:focus, select:focus {
   outline: none;
-  border-color: var(--accent);
-  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 178, 234, 0.62);
+  background: rgba(27, 17, 39, 0.82);
 }
 
 textarea { min-height: 120px; resize: vertical; }

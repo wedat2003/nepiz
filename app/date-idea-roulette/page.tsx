@@ -127,10 +127,12 @@ export default function DateIdeaRoulettePage() {
                       {ideas.map((idea, index) => (
                         <div
                           key={`${idea}-${index}`}
-                          className="absolute left-1/2 top-1/2 w-[44%] -translate-y-1/2 origin-left text-center text-[11px] font-medium text-white"
-                          style={{ transform: `rotate(${index * segmentAngle + segmentAngle / 2 - 90}deg)` }}
+                          className="absolute left-1/2 top-1/2 w-[42%] origin-left"
+                          style={{
+                            transform: `rotate(${index * segmentAngle + segmentAngle / 2 - 90}deg) translateX(24%)`,
+                          }}
                         >
-                          <span className="block -translate-y-1/2 rounded-md bg-black/20 px-2 py-1 backdrop-blur-sm">
+                          <span className="block -translate-y-1/2 rounded-md bg-black/20 px-2 py-1 text-center text-[11px] font-medium text-white backdrop-blur-sm">
                             {idea.length > 22 ? `${idea.substring(0, 22).trimEnd()}...` : idea}
                           </span>
                         </div>

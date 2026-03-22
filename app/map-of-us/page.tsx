@@ -227,7 +227,7 @@ export default function MapOfUsPage() {
                   <div ref={mapContainerRef} className="h-[24rem] w-full" />
                 </div>
 
-                <div className="flex w-full flex-col items-center gap-4 text-center">
+                <div className="flex w-full flex-col items-center gap-3 text-center md:gap-4">
                   <Button
                     type="button"
                     onClick={() => setIsPickMode((value) => !value)}
@@ -247,7 +247,7 @@ export default function MapOfUsPage() {
           <article className="w-full rounded-2xl border border-transparent bg-transparent p-6 md:p-8">
             <div className="grid min-h-[46rem] rounded-2xl border border-transparent bg-transparent p-8 md:p-10">
               <div className="flex h-full w-full items-center justify-center">
-                <form onSubmit={handleAddPlace} className="flex w-full max-w-md flex-col items-center space-y-10">
+                <form onSubmit={handleAddPlace} className="flex w-full max-w-md flex-col items-center space-y-6 md:space-y-10">
                   <div className="mx-auto w-full max-w-sm space-y-3">
                     <p className="text-center text-xs uppercase tracking-[0.16em] text-white/60">City</p>
                     <input
