@@ -18,7 +18,7 @@ import {
   Route,
   TimerReset,
 } from 'lucide-react';
-import { removeFromStorage, type Counter } from '@/lib/storage';
+import { removeFromStorage, signOutCloud, type Counter } from '@/lib/storage';
 import { useStoredCollection } from '@/lib/storage-hooks';
 
 const DEFAULT_COUNTER: Counter = {
@@ -109,6 +109,7 @@ export default function Home() {
   }, []);
 
   const handleLogout = () => {
+    signOutCloud();
     removeFromStorage('loginSession');
     router.replace('/login');
   };

@@ -84,8 +84,7 @@ export default function JourneyPage() {
     const file = event.target.files?.[0];
     if (!file) return;
     const type: 'image' | 'video' = file.type.startsWith('video/') ? 'video' : 'image';
-    const useObjectUrl = type === 'video' || file.size > 1_500_000;
-    const mediaUrl = useObjectUrl ? URL.createObjectURL(file) : await readFileAsDataUrl(file);
+    const mediaUrl = await readFileAsDataUrl(file);
     setNewMediaType(type);
     setNewMediaUrl(mediaUrl);
     event.target.value = '';
