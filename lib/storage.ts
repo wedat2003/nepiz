@@ -41,6 +41,13 @@ function getCloudConfig() {
   };
 }
 
+function getSharedCloudCredentials() {
+  const email = process.env.NEXT_PUBLIC_SUPABASE_SHARED_EMAIL;
+  const password = process.env.NEXT_PUBLIC_SUPABASE_SHARED_PASSWORD;
+  if (!email || !password) return null;
+  return { email, password };
+}
+
 function loadCloudSession(): CloudSession | null {
   if (typeof window === 'undefined') return null;
   try {
@@ -59,6 +66,17 @@ function saveCloudSession(session: CloudSession) {
 
 export function hasCloudSession() {
   return Boolean(loadCloudSession());
+}
+
+export async function ensureCloudSessionFromSharedCreds() {
+  const current = await getValidCloudSession();
+  if (current) return true;
+
+  const shared = getSharedCloudCredentials();
+  if (!shared) return false;
+
+  const result = await signInToCloud(shared.email, shared.password);
+  return result.ok;
 }
 
 async function refreshCloudSessionIfNeeded(session: CloudSession): Promise<CloudSession | null> {

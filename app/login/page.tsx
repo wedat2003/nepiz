@@ -4,11 +4,10 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Heart, LockKeyhole, Sparkles } from 'lucide-react';
 import {
-  hasCloudSession,
+  ensureCloudSessionFromSharedCreds,
   hydrateLocalStorageFromCloud,
   loadValueFromStorage,
   saveValueToStorage,
-  signInToCloud,
 } from '@/lib/storage';
 
 const LOVE_CODE = 'nepiz';
@@ -17,9 +16,6 @@ export default function LoginPage() {
   const router = useRouter();
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
-  const [cloudError, setCloudError] = useState('');
-  const [cloudEmail, setCloudEmail] = useState('');
-  const [cloudPassword, setCloudPassword] = useState('');
   const [isCloudLoading, setIsCloudLoading] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
 
@@ -39,25 +35,12 @@ export default function LoginPage() {
     }
 
     setError('');
-    setCloudError('');
-
-    const shouldUseCloudLogin = cloudEmail.trim().length > 0 || cloudPassword.length > 0;
-    if (shouldUseCloudLogin) {
-      if (!cloudEmail.trim() || !cloudPassword) {
-        setCloudError('Cloud email and cloud password are both required.');
-        return;
-      }
-
-      setIsCloudLoading(true);
-      const result = await signInToCloud(cloudEmail.trim(), cloudPassword);
-      setIsCloudLoading(false);
-      if (!result.ok) {
-        setCloudError(result.error);
-        return;
-      }
-
+    setIsCloudLoading(true);
+    const cloudReady = await ensureCloudSessionFromSharedCreds();
+    if (cloudReady) {
       await hydrateLocalStorageFromCloud();
     }
+    setIsCloudLoading(false);
 
     setIsUnlocking(true);
     saveValueToStorage('loginSession', true);
@@ -110,32 +93,7 @@ export default function LoginPage() {
                 </div>
               </label>
 
-              <label>
-                Cloud email (optional)
-                <div className="login-form__field">
-                  <input
-                    type="email"
-                    value={cloudEmail}
-                    onChange={(event) => setCloudEmail(event.target.value)}
-                    placeholder={hasCloudSession() ? 'Cloud connected on this device' : 'you@example.com'}
-                  />
-                </div>
-              </label>
-
-              <label>
-                Cloud password (optional)
-                <div className="login-form__field">
-                  <input
-                    type="password"
-                    value={cloudPassword}
-                    onChange={(event) => setCloudPassword(event.target.value)}
-                    placeholder="Cloud account password"
-                  />
-                </div>
-              </label>
-
               {error ? <p className="login-form__error">{error}</p> : null}
-              {cloudError ? <p className="login-form__error">{cloudError}</p> : null}
 
               <button
                 type="submit"
@@ -147,7 +105,7 @@ export default function LoginPage() {
             </form>
 
             <p className="login-card__hint">
-              Hint: Your nickname. Add cloud credentials to sync data across devices.
+              Hint: Your nickname
             </p>
           </>
         )}
