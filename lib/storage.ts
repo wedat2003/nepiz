@@ -178,9 +178,16 @@ export async function uploadMediaFileToCloud(
   file: File,
   folder: 'gallery' | 'journey' | 'polaroids' = 'gallery',
 ): Promise<{ url: string; path: string } | null> {
-  const session = await getValidCloudSession();
+  let session = await getValidCloudSession();
   const config = getCloudConfig();
-  if (!session || !config) return null;
+  if (!config) return null;
+  if (!session) {
+    const recovered = await ensureCloudSessionFromSharedCreds();
+    if (recovered) {
+      session = await getValidCloudSession();
+    }
+  }
+  if (!session) return null;
 
   const safeName = sanitizeFileName(file.name || 'upload.bin');
   const path = `${session.userId}/${folder}/${generateId()}-${safeName}`;
@@ -202,6 +209,7 @@ export async function uploadMediaFileToCloud(
     );
 
     if (!uploadResponse.ok) {
+      console.warn('Cloud media upload failed', uploadResponse.status, await uploadResponse.text());
       return null;
     }
 
@@ -219,6 +227,7 @@ export async function uploadMediaFileToCloud(
     );
 
     if (!signResponse.ok) {
+      console.warn('Cloud media sign failed', signResponse.status, await signResponse.text());
       return null;
     }
 

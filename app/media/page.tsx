@@ -60,15 +60,6 @@ const fallbackItems: MediaItemType[] = [
   },
 ]
 
-function readFileAsDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error ?? new Error('Failed to read file.'));
-    reader.readAsDataURL(file);
-  });
-}
-
 function getImageSize(file: File) {
   return new Promise<{ width: number; height: number }>((resolve, reject) => {
     const img = new Image();
@@ -125,6 +116,7 @@ function getSpan(type: Media['type'], width?: number, height?: number) {
 export default function Media() {
   const storedMedia = useStoredCollection<Media>('media', []);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Array<string | number>>([]);
 
@@ -197,13 +189,17 @@ export default function Media() {
     if (files.length === 0) return;
 
     setIsUploading(true);
+    setUploadError('');
 
     try {
       const uploadedResults = await Promise.allSettled(
         files.map(async (file) => {
           const type = file.type.startsWith('video/') ? 'video' : 'image';
           const cloudUpload = await uploadMediaFileToCloud(file, 'gallery');
-          const data = cloudUpload?.url ?? (await readFileAsDataUrl(file));
+          if (!cloudUpload) {
+            throw new Error('Cloud upload failed. Please log in again and check cloud setup.');
+          }
+          const data = cloudUpload.url;
           const size =
             type === 'video'
               ? await getVideoSize(file).catch(() => ({ width: 1920, height: 1080 }))
@@ -233,6 +229,7 @@ export default function Media() {
       });
 
       if (uploaded.length === 0) {
+        setUploadError('Upload failed. Cloud is required for larger media and cross-device sync.');
         event.target.value = '';
         return;
       }
@@ -323,6 +320,10 @@ export default function Media() {
             )}
           </div>
         </div>
+
+        {uploadError ? (
+          <p className="text-sm text-rose-300">{uploadError}</p>
+        ) : null}
 
         <div className="hr" />
       </div>

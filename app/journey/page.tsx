@@ -21,15 +21,6 @@ function sortEntries(a: JourneyEntry, b: JourneyEntry) {
   return new Date(a.date).getTime() - new Date(b.date).getTime();
 }
 
-function readFileAsDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
-
 function formatEntryDate(value: string) {
   return new Date(value).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -50,6 +41,7 @@ export default function JourneyPage() {
   const [newText, setNewText] = useState('');
   const [newMediaUrl, setNewMediaUrl] = useState('');
   const [newMediaPath, setNewMediaPath] = useState('');
+  const [newMediaError, setNewMediaError] = useState('');
   const [newMediaType, setNewMediaType] = useState<'image' | 'video' | null>(null);
   const mapPlaces = useStoredCollection<MapPlace>('mapPlaces', []);
   const sortedMapPlaces = useMemo(
@@ -80,6 +72,7 @@ export default function JourneyPage() {
     setNewText('');
     setNewMediaUrl('');
     setNewMediaPath('');
+    setNewMediaError('');
     setNewMediaType(null);
     setIsComposerOpen(false);
   };
@@ -89,7 +82,13 @@ export default function JourneyPage() {
     if (!file) return;
     const type: 'image' | 'video' = file.type.startsWith('video/') ? 'video' : 'image';
     const cloudUpload = await uploadMediaFileToCloud(file, 'journey');
-    const mediaUrl = cloudUpload?.url ?? (await readFileAsDataUrl(file));
+    if (!cloudUpload) {
+      setNewMediaError('Cloud upload failed. Please try again after a fresh login.');
+      event.target.value = '';
+      return;
+    }
+    const mediaUrl = cloudUpload.url;
+    setNewMediaError('');
     setNewMediaType(type);
     setNewMediaUrl(mediaUrl);
     setNewMediaPath(cloudUpload?.path ?? '');
@@ -356,6 +355,9 @@ export default function JourneyPage() {
                         }}
                       />
                     </div>
+                    {newMediaError ? (
+                      <p className="text-center text-xs text-rose-300">{newMediaError}</p>
+                    ) : null}
                   </div>
 
                   <div className="space-y-3">
