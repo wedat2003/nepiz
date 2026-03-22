@@ -7,11 +7,13 @@ import { ArrowLeft, Plus, Save, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Timeline } from '@/components/ui/timeline';
 import {
+  deleteCloudMediaByPath,
   generateId,
   loadFromStorage,
   saveToStorage,
   type JourneyEntry,
   type MapPlace,
+  uploadMediaFileToCloud,
 } from '@/lib/storage';
 import { useStoredCollection } from '@/lib/storage-hooks';
 
@@ -47,6 +49,7 @@ export default function JourneyPage() {
   const [newLocation, setNewLocation] = useState('');
   const [newText, setNewText] = useState('');
   const [newMediaUrl, setNewMediaUrl] = useState('');
+  const [newMediaPath, setNewMediaPath] = useState('');
   const [newMediaType, setNewMediaType] = useState<'image' | 'video' | null>(null);
   const mapPlaces = useStoredCollection<MapPlace>('mapPlaces', []);
   const sortedMapPlaces = useMemo(
@@ -76,6 +79,7 @@ export default function JourneyPage() {
     setNewLocation('');
     setNewText('');
     setNewMediaUrl('');
+    setNewMediaPath('');
     setNewMediaType(null);
     setIsComposerOpen(false);
   };
@@ -84,9 +88,11 @@ export default function JourneyPage() {
     const file = event.target.files?.[0];
     if (!file) return;
     const type: 'image' | 'video' = file.type.startsWith('video/') ? 'video' : 'image';
-    const mediaUrl = await readFileAsDataUrl(file);
+    const cloudUpload = await uploadMediaFileToCloud(file, 'journey');
+    const mediaUrl = cloudUpload?.url ?? (await readFileAsDataUrl(file));
     setNewMediaType(type);
     setNewMediaUrl(mediaUrl);
+    setNewMediaPath(cloudUpload?.path ?? '');
     event.target.value = '';
   };
 
@@ -120,6 +126,7 @@ export default function JourneyPage() {
       placeId: selectedPlace?.id,
       location: resolvedLocation,
       mediaUrl: newMediaUrl || undefined,
+      mediaPath: newMediaPath || undefined,
       mediaType: newMediaType || undefined,
       imageUrl: newMediaType === 'image' ? newMediaUrl || undefined : undefined,
       createdAt: Date.now(),
@@ -130,7 +137,13 @@ export default function JourneyPage() {
   };
 
   const deleteEntry = (id: string) => {
-    setEntries((current) => current.filter((entry) => entry.id !== id));
+    setEntries((current) => {
+      const target = current.find((entry) => entry.id === id);
+      if (target?.mediaPath) {
+        void deleteCloudMediaByPath(target.mediaPath);
+      }
+      return current.filter((entry) => entry.id !== id);
+    });
   };
 
   const timelineData = entries.map((entry) => ({

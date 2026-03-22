@@ -6,7 +6,7 @@ import { ArrowLeft, ImagePlus } from 'lucide-react';
 import InteractiveBentoGallery, {
   type MediaItemType,
 } from '@/components/ui/interactive-bento-gallery';
-import { generateId, saveToStorage, type Media } from '@/lib/storage';
+import { deleteCloudMediaByPath, generateId, saveToStorage, type Media, uploadMediaFileToCloud } from '@/lib/storage';
 import { useStoredCollection } from '@/lib/storage-hooks';
 
 const fallbackItems: MediaItemType[] = [
@@ -128,11 +128,16 @@ export default function Media() {
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Array<string | number>>([]);
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = async () => {
     if (selectedIds.length === 0) return;
     const selectedSourceIds = new Set(
       galleryItems.filter((item) => selectedIds.includes(item.id) && item.sourceId).map((item) => item.sourceId as string),
     );
+    const cloudPaths = storedMedia
+      .filter((entry) => selectedSourceIds.has(entry.id) && entry.cloudPath)
+      .map((entry) => entry.cloudPath as string);
+    await Promise.all(cloudPaths.map((path) => deleteCloudMediaByPath(path)));
+
     const updated = storedMedia.filter((entry) => !selectedSourceIds.has(entry.id));
     saveToStorage('media', updated);
     setSelectedIds([]);
@@ -197,7 +202,8 @@ export default function Media() {
       const uploadedResults = await Promise.allSettled(
         files.map(async (file) => {
           const type = file.type.startsWith('video/') ? 'video' : 'image';
-          const data = await readFileAsDataUrl(file);
+          const cloudUpload = await uploadMediaFileToCloud(file, 'gallery');
+          const data = cloudUpload?.url ?? (await readFileAsDataUrl(file));
           const size =
             type === 'video'
               ? await getVideoSize(file).catch(() => ({ width: 1920, height: 1080 }))
@@ -208,6 +214,7 @@ export default function Media() {
             type,
             data,
             name: file.name,
+            cloudPath: cloudUpload?.path,
             width: size.width,
             height: size.height,
             createdAt: Date.now() + Math.floor(Math.random() * 1000),

@@ -20,6 +20,7 @@ type CloudSession = {
   expiresAt: number;
   userId: string;
 };
+const CLOUD_MEDIA_BUCKET = 'nepiz-media';
 
 type CloudAuthResponse = {
   access_token: string;
@@ -142,6 +143,97 @@ export async function signInToCloud(email: string, password: string): Promise<{ 
 export function signOutCloud() {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(CLOUD_SESSION_KEY);
+}
+
+function encodeStoragePath(path: string) {
+  return path
+    .split('/')
+    .map((part) => encodeURIComponent(part))
+    .join('/');
+}
+
+function sanitizeFileName(fileName: string) {
+  return fileName.replace(/[^\w.\-]+/g, '_').replace(/_+/g, '_').replace(/^_+|_+$/g, '');
+}
+
+export async function uploadMediaFileToCloud(
+  file: File,
+  folder: 'gallery' | 'journey' | 'polaroids' = 'gallery',
+): Promise<{ url: string; path: string } | null> {
+  const session = await getValidCloudSession();
+  const config = getCloudConfig();
+  if (!session || !config) return null;
+
+  const safeName = sanitizeFileName(file.name || 'upload.bin');
+  const path = `${session.userId}/${folder}/${generateId()}-${safeName}`;
+  const encodedPath = encodeStoragePath(path);
+
+  try {
+    const uploadResponse = await fetch(
+      `${config.url}/storage/v1/object/${CLOUD_MEDIA_BUCKET}/${encodedPath}`,
+      {
+        method: 'POST',
+        headers: {
+          apikey: config.anonKey,
+          Authorization: `Bearer ${session.accessToken}`,
+          'x-upsert': 'true',
+          'Content-Type': file.type || 'application/octet-stream',
+        },
+        body: file,
+      },
+    );
+
+    if (!uploadResponse.ok) {
+      return null;
+    }
+
+    const signResponse = await fetch(
+      `${config.url}/storage/v1/object/sign/${CLOUD_MEDIA_BUCKET}/${encodedPath}`,
+      {
+        method: 'POST',
+        headers: {
+          apikey: config.anonKey,
+          Authorization: `Bearer ${session.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ expiresIn: 60 * 60 * 24 * 365 * 10 }),
+      },
+    );
+
+    if (!signResponse.ok) {
+      return null;
+    }
+
+    const signData = (await signResponse.json()) as { signedURL?: string };
+    if (!signData.signedURL) return null;
+
+    const url = signData.signedURL.startsWith('http')
+      ? signData.signedURL
+      : `${config.url}/storage/v1${signData.signedURL}`;
+
+    return { url, path };
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteCloudMediaByPath(path: string) {
+  const session = await getValidCloudSession();
+  const config = getCloudConfig();
+  if (!session || !config || !path) return;
+
+  const encodedPath = encodeStoragePath(path);
+  try {
+    await fetch(`${config.url}/storage/v1/object/${CLOUD_MEDIA_BUCKET}/${encodedPath}`, {
+      method: 'DELETE',
+      headers: {
+        apikey: config.anonKey,
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+    });
+  } catch {
+    // keep local mode when cloud delete fails
+  }
 }
 
 async function syncCloudValue<T>(key: StorageKey, value: T) {
@@ -292,6 +384,7 @@ export interface Media {
   type: 'image' | 'video';
   data: string; // base64 or blob url
   name: string;
+  cloudPath?: string;
   width?: number;
   height?: number;
   createdAt: number;
@@ -305,6 +398,7 @@ export interface JourneyEntry {
   placeId?: string;
   location?: string;
   mediaUrl?: string;
+  mediaPath?: string;
   mediaType?: 'image' | 'video';
   imageUrl?: string;
   createdAt: number;
