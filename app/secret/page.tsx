@@ -8,12 +8,12 @@ import { SecretBotanicalGarden } from '@/components/ui/secret-botanical-garden';
 export default function Secret() {
   return (
     <main className="page-shell">
-      <section className="mb-40 pb-40 md:mb-56 md:pb-56">
-        <div className="space-y-12 md:space-y-16">
+      <section className="mb-16 pb-10 md:mb-32 md:pb-24">
+        <div className="space-y-8 md:space-y-12">
           <div className="pill w-fit">Secret</div>
 
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
-            <h1 className="max-w-5xl font-[var(--font-playfair)] text-5xl leading-[1.04] tracking-tight text-white md:text-7xl">
+          <div className="flex flex-col gap-6 md:gap-8 lg:flex-row lg:items-start lg:justify-between">
+            <h1 className="max-w-5xl font-[var(--font-playfair)] text-4xl leading-[1.06] tracking-tight text-white sm:text-5xl md:text-7xl">
               A secret garden Bloom
             </h1>
 
@@ -33,8 +33,8 @@ export default function Secret() {
         </div>
       </section>
 
-      <section className="scroll-mt-28 flex min-h-[70vh] items-center justify-center">
-        <div className="mx-auto w-full max-w-4xl">
+      <section className="scroll-mt-20 flex min-h-[58vh] items-center justify-center md:min-h-[66vh]">
+        <div className="mx-auto w-full max-w-5xl px-1 sm:px-2">
           <SecretBotanicalGarden />
         </div>
       </section>

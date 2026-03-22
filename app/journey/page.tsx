@@ -183,13 +183,13 @@ export default function JourneyPage() {
   }));
 
   return (
-    <main className="page-shell max-w-6xl mx-auto px-6 py-20 space-y-16">
+    <main className="page-shell max-w-6xl mx-auto px-4 py-12 space-y-10 md:px-6 md:py-20 md:space-y-16">
       <section className="space-y-10 pb-16">
         <div className="pill w-fit">Our Journey</div>
 
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-4xl space-y-10">
-            <h1 className="font-[var(--font-playfair)] text-5xl leading-[1.04] tracking-tight text-white md:text-7xl">
+            <h1 className="font-[var(--font-playfair)] text-4xl leading-[1.06] tracking-tight text-white sm:text-5xl md:text-7xl">
               Our Journey
             </h1>
             <p className="max-w-3xl text-base leading-[2.1] text-neutral-300 md:text-lg md:leading-[2.2]">

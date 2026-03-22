@@ -38,11 +38,11 @@ export default function Wishlist() {
   };
 
   return (
-    <main className="page-shell max-w-6xl mx-auto px-6 py-20 space-y-16">
+    <main className="page-shell max-w-6xl mx-auto px-4 py-12 space-y-10 md:px-6 md:py-20 md:space-y-16">
       <section className="space-y-10 pb-12 md:pb-16">
         <div className="pill w-fit">Wish List</div>
         <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-          <h1 className="max-w-4xl font-[var(--font-playfair)] text-5xl leading-[1.04] tracking-tight text-white md:text-7xl">
+          <h1 className="max-w-4xl font-[var(--font-playfair)] text-4xl leading-[1.06] tracking-tight text-white sm:text-5xl md:text-7xl">
             Wishes you want to do together
           </h1>
           <Button
